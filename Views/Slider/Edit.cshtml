@@ -1,5 +1,5 @@
 @model MVC_Project.Models.Slider.SliderViewModel
-@{
+{
     ViewData["Title"] = "Edit Slider";
 }
 
@@ -15,6 +15,7 @@
             <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-3">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 
+                <input type="hidden" asp-for="NotificationID" />
                 <input type="hidden" asp-for="ExistingFilepath" />
                 <input type="hidden" asp-for="OldDescription" />
 
@@ -34,7 +35,7 @@
                     <label class="form-label">Current Image</label>
                     <div>
                         @{
-                            var imgPath = Model.ExistingFilepath?.StartsWith("http") == true ? Model.ExistingFilepath : $"/uploads/sliders/{Model.ExistingFilepath}";
+                            var imgPath = Url.Action("Image", "Slider", new { path = Model.ExistingFilepath });
                         }
                         <img src="@imgPath" alt="Current Image" style="height: 100px; width: auto; object-fit: cover; border-radius: 4px;" />
                     </div>

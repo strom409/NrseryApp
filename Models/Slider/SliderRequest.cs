@@ -2,6 +2,7 @@ namespace MVC_Project.Models.Slider
 {
     public class SliderRequest
     {
+        public int NotificationID { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Filepath { get; set; } = string.Empty;

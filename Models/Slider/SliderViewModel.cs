@@ -6,6 +6,8 @@ namespace MVC_Project.Models.Slider
     {
         public List<SliderData> Sliders { get; set; } = new();
 
+        public int NotificationID { get; set; }
+
         [Required]
         public string Title { get; set; } = string.Empty;
         

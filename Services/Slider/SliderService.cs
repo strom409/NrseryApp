@@ -4,6 +4,7 @@ using MVC_Project.Models.Auth;
 using MVC_Project.Models.Slider;
 using MVC_Project.Options;
 using Microsoft.Extensions.Options;
+using MVC_Project.Services.Variety;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -42,10 +43,11 @@ namespace MVC_Project.Services.Slider
             return JsonSerializer.Deserialize<SliderResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<bool> AddSliderAsync(SliderRequest requestData, CancellationToken ct = default)
+        public async Task<ApiResponse<object>> AddSliderAsync(SliderRequest requestData, CancellationToken ct = default)
         {
             var session = _httpContextAccessor.HttpContext?.Session.GetObject<UserSession>(SessionKeys.UserSession);
-            if (session == null || string.IsNullOrEmpty(session.Token)) return false;
+            if (session == null || string.IsNullOrEmpty(session.Token))
+                return new ApiResponse<object> { IsSuccess = false, Message = "Session expired. Please login again." };
 
             var url = $"{_options.BaseUrl}{_options.Endpoints.Notification}/AddOrupdateSlider";
             
@@ -57,7 +59,38 @@ namespace MVC_Project.Services.Slider
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.Token);
 
             var response = await _httpClient.SendAsync(request, ct);
-            return response.IsSuccessStatusCode;
+            var rawJson = await response.Content.ReadAsStringAsync(ct);
+
+            try
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<object>>(
+                    rawJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (apiResponse != null)
+                {
+                    apiResponse.Status = (int)response.StatusCode;
+                    // If IsSuccess isn't set by backend, infer from HTTP status
+                    if (!apiResponse.IsSuccess)
+                    {
+                        apiResponse.IsSuccess = response.IsSuccessStatusCode;
+                    }
+                    return apiResponse;
+                }
+            }
+            catch
+            {
+                // Fall through to generic error
+            }
+
+            return new ApiResponse<object>
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Status = (int)response.StatusCode,
+                Message = response.IsSuccessStatusCode
+                    ? "Operation completed successfully."
+                    : $"Server error: {(int)response.StatusCode} {response.ReasonPhrase}"
+            };
         }
     }
 }
