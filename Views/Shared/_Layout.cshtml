@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - School Management</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #f4f6f9;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            height: 100vh;
+            background: linear-gradient(180deg, #1e3a8a, #2563eb);
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            width: 240px;
+            transition: 0.3s;
+        }
+
+            .sidebar h4 {
+                text-align: center;
+                margin-bottom: 30px;
+                font-weight: 600;
+            }
+
+            .sidebar a {
+                color: white;
+                text-decoration: none;
+                display: block;
+                padding: 12px 20px;
+                font-weight: 500;
+                transition: 0.2s;
+            }
+
+                .sidebar a:hover {
+                    background: rgba(255,255,255,0.2);
+                    padding-left: 25px;
+                }
+
+        /* CONTENT */
+        .content {
+            margin-left: 240px;
+            padding: 25px;
+        }
+
+        /* MOBILE */
+        @@media (max-width: 991px) {
+            .sidebar
+
+        {
+            position: absolute;
+            left: -240px;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            left: 0;
+        }
+
+        .content {
+            margin-left: 0;
+        }
+
+        }
+
+        /* TOPBAR (Mobile Toggle) */
+        .topbar {
+            background: #1e293b;
+            color: white;
+            padding: 10px 15px;
+            display: none;
+        }
+
+        @@media (max-width: 991px) {
+            .topbar
+
+        {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #1e293b;
+            color: white;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MOBILE TOPBAR -->
+    <div class="topbar">
+        <button class="btn btn-light btn-sm" onclick="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <span>🎓 School Portal</span>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <h4>🎓 School Portal</h4>
+
+        <a asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <a asp-controller="Home" asp-action="Slider">
+            <i class="bi bi-images"></i> Slider
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetAllNotifications">
+            <i class="bi bi-download"></i> Download
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetAllNotifications" asp-route-notificationId="0_0">
+            <i class="bi bi-bell"></i> Notification
+        </a>
+
+        <a asp-controller="Home" asp-action="Circular">
+            <i class="bi bi-file-earmark-text"></i> Circular
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetNotificationData" asp-route-notificationId="5_0">
+            <i class="bi bi-info-circle"></i> About Us
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetNotificationData" asp-route-notificationId="7_0">
+            <i class="bi bi-bullseye"></i> Mission
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetNotificationData" asp-route-notificationId="8_0">
+            <i class="bi bi-eye"></i> Vision
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetNotificationData" asp-route-notificationId="4_0">
+            <i class="bi bi-person-circle"></i> Principal Message
+        </a>
+
+        <a asp-controller="Notification" asp-action="GetContactData" asp-route-notificationId="6_0">
+            <i class="bi bi-envelope"></i> Contact
+        </a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+        @RenderBody()
+
+        <footer>
+            © 2026 School Management System
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("active");
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

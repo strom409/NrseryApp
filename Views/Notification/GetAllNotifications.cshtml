@@ -1,0 +1,218 @@
+﻿@model List<MVC_Project.Models.Notification.NotificationResponse>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-success border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">✅ @TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-danger border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">❌ @TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Notifications</h4>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="bi bi-plus-circle"></i> Add New
+        </button>
+    </div>
+
+    @* <div class="card shadow border-0 rounded-4">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead style="background:#1e293b; color:white;">
+                    <tr>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@(item.FilePath == "#" || string.IsNullOrEmpty(item.FilePath) ? "https://via.placeholder.com/50" : item.FilePath)"
+                                     style="width:50px;height:50px;object-fit:cover;border-radius:8px;"
+                                     onerror="this.src='https://via.placeholder.com/50'" />
+                            </td>
+                            <td class="fw-semibold">@item.Title</td>
+                            <td style="max-width:300px;">
+                                <div style="max-height:60px;overflow:hidden;text-overflow:ellipsis;">
+                                    @item.Description
+                                </div>
+                            </td>
+                            <td>@item.NotificationDate?.Substring(0, 10)</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning"
+                                        onclick="openEditModal(@item.NotificationId, '@Html.Raw(Uri.EscapeDataString(item.Title))', '@Html.Raw(Uri.EscapeDataString(item.Description))', '@item.FilePath', '@item.NotificationDate')">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div> *@
+    <div class="card shadow border-0 rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:14px;">
+                <thead style="background:#1e293b; color:white;">
+                    <tr>
+                        <th style="width:70px;">Image</th>
+                        <th style="width:200px;">Title</th>
+                        <th>Description</th>
+                        <th style="width:110px;">Date</th>
+                        <th style="width:80px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.FilePath) && item.FilePath != "#")
+                                {
+                                    <img src="@item.FilePath"
+                                         style="width:45px;height:45px;object-fit:cover;border-radius:8px;"
+                                         onerror="this.src='https://via.placeholder.com/45'" />
+                                }
+                                else
+                                {
+                                    <div style="width:45px;height:45px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td class="fw-semibold">@item.Title</td>
+                            <td>
+                                <span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                    @item.Description
+                                </span>
+                            </td>
+                            <td class="text-muted">
+                                @(item.NotificationDate?.Length >= 10 ? item.NotificationDate.Substring(0, 10) : item.NotificationDate)
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-warning"
+                                        onclick="openEditModal(@item.NotificationId, '@Html.Raw(Uri.EscapeDataString(item.Title))', '@Html.Raw(Uri.EscapeDataString(item.Description))', '@item.FilePath', '@item.NotificationDate')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-controller="Notification" asp-action="AddOrUpdateNotification" method="post">
+                <input type="hidden" name="NotificationID" id="modalNotificationId" value="0" />
+                <input type="hidden" name="ActionType" id="modalActionType" value="1" />
+                <input type="hidden" name="NotificationDate" id="modalDate" value="" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Title</label>
+                        <input type="text" name="Title" id="modalTitle2" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label>Description</label>
+                        <textarea name="Description" id="modalDescription" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label>Photo (Optional)</label>
+                        <input type="file" id="photoInput" class="form-control" accept="image/*" onchange="previewPhoto(this)" />
+                        <input type="hidden" name="Filepath" id="modalFilepath" />
+                        <div class="text-center mt-2">
+                            <img id="photoPreview" src="https://via.placeholder.com/80"
+                                 style="width:80px;height:80px;object-fit:cover;border-radius:8px;display:none;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Add Notification';
+            document.getElementById('modalNotificationId').value = '0';
+            document.getElementById('modalActionType').value = '1';
+            document.getElementById('modalTitle2').value = '';
+            document.getElementById('modalDescription').value = '';
+            document.getElementById('modalFilepath').value = '';
+            document.getElementById('modalDate').value = new Date().toISOString();
+            document.getElementById('photoPreview').style.display = 'none';
+            notificationModal.show();
+        }
+
+        function openEditModal(id, title, description, filepath, date) {
+            document.getElementById('modalTitle').innerText = 'Edit Notification';
+            document.getElementById('modalNotificationId').value = id;
+            document.getElementById('modalActionType').value = '2';
+            document.getElementById('modalTitle2').value = decodeURIComponent(title);
+            document.getElementById('modalDescription').value = decodeURIComponent(description);
+            document.getElementById('modalFilepath').value = filepath;
+            document.getElementById('modalDate').value = date;
+            var preview = document.getElementById('photoPreview');
+            if (filepath && filepath !== '#') {
+                preview.src = filepath;
+                preview.style.display = 'inline-block';
+            } else {
+                preview.style.display = 'none';
+            }
+            notificationModal.show();
+        }
+
+        function previewPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('photoPreview').src = e.target.result;
+                document.getElementById('photoPreview').style.display = 'inline-block';
+                document.getElementById('modalFilepath').value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.classList.remove('show')), 4000);
+    </script>
+}

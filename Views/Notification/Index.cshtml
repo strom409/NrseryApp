@@ -1,0 +1,144 @@
+﻿@model MVC_Project.Models.Notification.NotificationResponse
+@{
+    ViewData["Title"] = "Notification";
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-success border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">✅ @TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-danger border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">❌ @TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4">
+        <h4 class="mb-4">Notification</h4>
+        <form asp-controller="Notification" asp-action="Update" method="post">
+            <input type="hidden" name="Base64Photo" id="base64Image" value="@Model.FilePath" />
+            <div class="mb-4 text-center">
+                <label for="imageInput" style="cursor:pointer;">
+                    <img id="previewImage"
+                         src="@(string.IsNullOrEmpty(Model.FilePath) ? "https://via.placeholder.com/150" : Model.FilePath)"
+                         class="rounded" style="width:150px;height:150px;object-fit:cover;" />
+                </label>
+                <input type="file" id="imageInput" class="d-none" accept="image/*" onchange="convertToBase64(this)" />
+                <div class="text-muted mt-2">Click image to change</div>
+            </div>
+            @* <div class="mb-3">
+               
+                <div class="border rounded p-3 mb-2 bg-white" style="min-height:120px;">
+                    @Html.Raw(Model.Description)
+                </div>
+              
+                <textarea name="Description" class="form-control" rows="5">@Model.Description</textarea>
+            </div> *@
+            <div class="mb-3">
+                <textarea name="Description" id="editor" class="form-control" rows="5">@Model.Description</textarea>
+            </div>
+
+            @section Scripts {
+                <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+                <script>
+                    ClassicEditor
+                        .create(document.querySelector('#editor'))
+                        .catch(error => console.error(error));
+                </script>
+            }
+            <button type="submit" class="btn btn-success w-100">Update</button>
+        </form>
+    </div>
+</div>
+<script>
+    function convertToBase64(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById("previewImage").src = e.target.result;
+            document.getElementById("base64Image").value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.classList.remove('show')), 4000);
+</script>
+@* ----------------------------------------------------------------- *@
+
+@* @model MVC_Project.Models.Notification.NotificationResponse
+@{
+    ViewData["Title"] = "Notification";
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-success border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">✅ @TempData["SuccessMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div class="toast show align-items-center text-white bg-danger border-0 shadow" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">❌ @TempData["ErrorMessage"]</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4">
+        <h4 class="mb-4">Notification</h4>
+        <form asp-controller="Notification" asp-action="Update" method="post">
+          
+            <input type="hidden" name="Base64Photo" id="base64Image" value="@Model.FilePath" />
+            <div class="mb-4 text-center">
+                <label for="imageInput" style="cursor:pointer;">
+                    <img id="previewImage"
+                         src="@(string.IsNullOrEmpty(Model.FilePath) ? "https://via.placeholder.com/150" : Model.FilePath)"
+                         class="rounded" style="width:150px;height:150px;object-fit:cover;" />
+                </label>
+                <input type="file" id="imageInput" class="d-none" accept="image/*" onchange="convertToBase64(this)" />
+                <div class="text-muted mt-2">Click image to change</div>
+            </div>
+           
+            <div class="mb-3">
+                <div class="border rounded p-3 mb-2 bg-white" style="min-height:120px;">
+                    @Html.Raw(Model.Description)
+                </div>
+                <textarea name="Description" class="form-control" rows="5">@Model.Description</textarea>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Update</button>
+        </form>
+    </div>
+</div>
+<script>
+    function convertToBase64(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById("previewImage").src = e.target.result;
+            document.getElementById("base64Image").value = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.classList.remove('show')), 4000);
+</script> *@
