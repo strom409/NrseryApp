@@ -1,0 +1,114 @@
+@model MVC_Project.Models.Slider.SliderViewModel
+@{
+    ViewData["Title"] = "Sliders";
+}
+
+<div class="container-fluid">
+    <div class="row page-titles mb-4">
+        <div class="col-md-5 align-self-center">
+            <h3 class="text-themecolor">Slider Management</h3>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Add New Slider</h4>
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="col-md-4">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="Enter title" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <input asp-for="Description" class="form-control" placeholder="Enter description" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="ImageFile" class="form-label">Select Image</label>
+                    <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus mr-1"></i> Add Slider
+                    </button>
+                </div>
+            </form>
+
+            <hr />
+
+            <h4 class="card-title mt-4">Slider List</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Added By</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Sliders != null && Model.Sliders.Any())
+                        {
+                            int count = 1;
+                            foreach (var slider in Model.Sliders)
+                            {
+                                <tr>
+                                    <td>@(count++)</td>
+                                    <td>
+                                        @* Assuming the API returns a full path or we serve it from our uploads *@
+                                        @{
+                                            var imgPath = slider.Filepath.StartsWith("http") ? slider.Filepath : $"/uploads/sliders/{slider.Filepath}";
+                                        }
+                                        <img src="@imgPath" alt="@slider.Title" style="height: 50px; width: 80px; object-fit: cover; border-radius: 4px;" />
+                                    </td>
+                                    <td>@slider.Title</td>
+                                    <td>@slider.Description</td>
+                                    <td>@slider.Username</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-description="@slider.Description" asp-route-filepath="@slider.Filepath" class="btn btn-sm btn-info text-white">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No sliders found</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

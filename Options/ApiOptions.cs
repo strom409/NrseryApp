@@ -1,4 +1,4 @@
-﻿namespace MVC_Project.Options
+namespace MVC_Project.Options
 {
     public class ApiOptions
     {
@@ -10,5 +10,6 @@
     {
         public string Login { get; set; } = string.Empty;
         public string Notification { get; set; } = string.Empty;
+        public string Slider { get; set; } = string.Empty;
     }
 }

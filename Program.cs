@@ -1,6 +1,7 @@
 using MVC_Project.Options;
 using MVC_Project.Services.Auth;
 using MVC_Project.Services.Notification;
+using MVC_Project.Services.Slider;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.Configure<ApiOptions>(
 
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<INotificationService, NotificationService>();
+builder.Services.AddHttpClient<ISliderService, SliderService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSession(options =>

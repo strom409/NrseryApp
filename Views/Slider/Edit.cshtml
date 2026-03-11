@@ -1,0 +1,62 @@
+@model MVC_Project.Models.Slider.SliderViewModel
+@{
+    ViewData["Title"] = "Edit Slider";
+}
+
+<div class="container-fluid">
+    <div class="row page-titles mb-4">
+        <div class="col-md-5 align-self-center">
+            <h3 class="text-themecolor">Edit Slider</h3>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <input type="hidden" asp-for="ExistingFilepath" />
+                <input type="hidden" asp-for="OldDescription" />
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="Enter title" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <input asp-for="Description" class="form-control" placeholder="Enter description" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Current Image</label>
+                    <div>
+                        @{
+                            var imgPath = Model.ExistingFilepath?.StartsWith("http") == true ? Model.ExistingFilepath : $"/uploads/sliders/{Model.ExistingFilepath}";
+                        }
+                        <img src="@imgPath" alt="Current Image" style="height: 100px; width: auto; object-fit: cover; border-radius: 4px;" />
+                    </div>
+                </div>
+
+                <div class="col-md-12 mb-4">
+                    <label asp-for="ImageFile" class="form-label">Change Image (Leave blank to keep current)</label>
+                    <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Update Slider
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
