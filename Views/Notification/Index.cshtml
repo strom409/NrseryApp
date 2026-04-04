@@ -1,4 +1,4 @@
-﻿@model MVC_Project.Models.Notification.NotificationResponse
+@model MVC_Project.Models.Notification.NotificationResponse
 @{
     ViewData["Title"] = "Notification";
 }
@@ -31,9 +31,23 @@
             <input type="hidden" name="Base64Photo" id="base64Image" value="@Model.FilePath" />
             <div class="mb-4 text-center">
                 <label for="imageInput" style="cursor:pointer;">
+                    @{
+                        var imgSrc = "https://via.placeholder.com/150";
+                        if (Model != null && !string.IsNullOrEmpty(Model.FilePath))
+                        {
+                            if (Model.FilePath.StartsWith("data:image") || Model.FilePath.Contains(";base64,"))
+                            {
+                                imgSrc = Model.FilePath;
+                            }
+                            else
+                            {
+                                imgSrc = Url.Action("Image", "Home", new { path = Model.FilePath });
+                            }
+                        }
+                    }
                     <img id="previewImage"
-                         src="@(string.IsNullOrEmpty(Model.FilePath) ? "https://via.placeholder.com/150" : Model.FilePath)"
-                         class="rounded" style="width:150px;height:150px;object-fit:cover;" />
+                         src="@imgSrc"
+                         class="rounded shadow-sm border" style="width:150px;height:150px;object-fit:cover;" />
                 </label>
                 <input type="file" id="imageInput" class="d-none" accept="image/*" onchange="convertToBase64(this)" />
                 <div class="text-muted mt-2">Click image to change</div>

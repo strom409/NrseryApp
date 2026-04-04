@@ -21,6 +21,7 @@ builder.Services.Configure<ApiOptions>(
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<INotificationService, NotificationService>();
 builder.Services.AddHttpClient<ISliderService, SliderService>();
+builder.Services.AddHttpClient<MVC_Project.Services.ClassSection.IClassSectionService, MVC_Project.Services.ClassSection.ClassSectionService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSession(options =>

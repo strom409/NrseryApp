@@ -1,5 +1,6 @@
-﻿using MVC_Project.Models.Notification;
-using MVC_Project.Services.Variety;
+using MVC_Project.Models.Notification;
+using MVC_Project.Services.Helper;
+
 
 namespace MVC_Project.Services.Notification
 {
@@ -11,5 +12,9 @@ namespace MVC_Project.Services.Notification
         Task<ApiResponse<object>> AddOrUpdateContactAsync(ContactUpdateRequest model);
         Task<ApiResponse<List<NotificationResponse>>> GetAllNotificationsAsync();
         Task<ApiResponse<object>> AddOrUpdateNotificationAsync(NotificationAddUpdateRequest model);
+        Task<ApiResponse<object>> AddOrUpdateDownloadsAsync(DownloadUploadRequest model);
+        Task<ApiResponse<object>> AddOrUpdateCircularAsync(CircularAddRequest model);
+        Task<ApiResponse<List<EventResponse>>> GetEventDataAsync(string date);
+        Task<ApiResponse<object>> AddOrUpdateEventAsync(EventAddRequest model);
     }
 }

@@ -1,0 +1,489 @@
+@{
+    ViewData["Title"] = "Download Data";
+}
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0 fw-bold text-primary"><i class="bi bi-cloud-download me-2"></i>Download Data</h4>
+                <p class="text-muted mt-1">Select the session, class, and section to download relevant data.</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-success px-4 shadow-sm" onclick="openAddModal()" style="border-radius: 8px;">
+                    <i class="bi bi-upload me-2"></i> Upload Document
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <!-- Session Selection -->
+                <div class="col-md-3">
+                    <label for="sessionDropdown" class="form-label fw-semibold text-secondary">Session</label>
+                    <select id="sessionDropdown" class="form-select form-select-lg shadow-none border-1" style="border-radius: 8px;">
+                        <option value="">Select Session</option>
+                        <option value="2024-25">2024-25</option>
+                        <option value="@Configuration["Session"]">@Configuration["Session"]</option>
+                        
+                    </select>
+                </div>
+
+                <!-- Class Selection -->
+                <div class="col-md-3">
+                    <label for="classDropdown" class="form-label fw-semibold text-secondary">Class</label>
+                    <select id="classDropdown" class="form-select form-select-lg shadow-none border-1" disabled style="border-radius: 8px;">
+                        <option value="">Select Class</option>
+                    </select>
+                </div>
+
+                <!-- Subject Selection -->
+                <div class="col-md-3">
+                    <label for="sectionDropdown" class="form-label fw-semibold text-secondary">Section / Subject</label>
+                    <select id="sectionDropdown" class="form-select form-select-lg shadow-none border-1" disabled style="border-radius: 8px;">
+                        <option value="">Select Subject</option>
+                    </select>
+                </div>
+
+                <!-- Upload Type Selection -->
+                <div class="col-md-3">
+                    <label for="uploadTypeDropdown" class="form-label fw-semibold text-secondary">Upload Type</label>
+                    <select id="uploadTypeDropdown" class="form-select form-select-lg shadow-none border-1" style="border-radius: 8px;">
+                        <option value="">Select Type</option>
+                        @foreach (var type in ViewBag.UploadTypes as List<MVC_Project.Models.UploadType>)
+                        {
+                            <option value="@type.Id">@type.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download List Table -->
+    <div class="card shadow-sm border-0 rounded-4 mt-4" id="downloadListCard" style="display: none;">
+        <div class="card-header bg-white border-bottom-0 pt-4">
+            <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-list-check me-2"></i>Available Documents</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th style="width: 10%;">S.No</th>
+                            <th style="width: 20%;">Date</th>
+                            <th style="width: 50%;">Title</th>
+                            <th style="width: 20%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="downloadTableBody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noDataMessage" class="text-center py-5" style="display: none;">
+                <i class="bi bi-folder2-open text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-2 fw-semibold">No records found for the selected filters.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Download Modal -->
+<div class="modal fade" id="addDownloadModal" tabindex="-1" aria-labelledby="addDownloadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white" id="modalHeader">
+                <h5 class="modal-title fw-bold" id="addDownloadModalLabel"><i class="bi bi-upload me-2"></i> Document Form</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addDownloadForm">
+                    <input type="hidden" id="notificationId" value="0">
+                    <input type="hidden" id="actionType" value="1">
+                    <input type="hidden" id="existingFilePath" value="">
+                    <div class="mb-3">
+                        <label for="uploadTitle" class="form-label fw-semibold">Title</label>
+                        <input type="text" class="form-control shadow-none" id="uploadTitle" placeholder="Enter title" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modalSession" class="form-label fw-semibold">Session</label>
+                            <select id="modalSession" class="form-select shadow-none">
+                                <option value="">Select Session</option>
+                                <option value="2024-25">2024-25</option>
+                                <option value="@Configuration["Session"]">@Configuration["Session"]</option>
+                                <option value="2025-27">2025-27</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modalClass" class="form-label fw-semibold">Class</label>
+                            <select id="modalClass" class="form-select shadow-none" disabled>
+                                <option value="">Select Class</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modalSubject" class="form-label fw-semibold">Subject</label>
+                            <select id="modalSubject" class="form-select shadow-none" disabled>
+                                <option value="">Select Subject</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modalUploadType" class="form-label fw-semibold">Upload Type</label>
+                            <select id="modalUploadType" class="form-select shadow-none">
+                                <option value="">Select Type</option>
+                                @foreach (var type in ViewBag.UploadTypes as List<MVC_Project.Models.UploadType>)
+                                {
+                                    <option value="@type.Id">@type.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="uploadFile" class="form-label fw-semibold">File (PDF only)</label>
+                        <input class="form-control shadow-none" type="file" id="uploadFile" accept=".pdf">
+                        <div id="currentFileDisplay" class="mt-1 small text-muted" style="display: none;">
+                            <i class="bi bi-file-earmark-check me-1"></i> Current file: <span id="currentFileName"></span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success rounded-pill px-4" id="btnUploadSubmit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const initialSessionId = document.getElementById('sessionDropdown').value;
+            if (initialSessionId) {
+                fetchClasses(initialSessionId);
+            }
+        });
+
+        document.getElementById('sessionDropdown').addEventListener('change', function () {
+            const sessionId = this.value;
+            const classDropdown = document.getElementById('classDropdown');
+            const subjectDropdown = document.getElementById('sectionDropdown');
+            
+            // Reset cascading dropdowns
+            classDropdown.innerHTML = '<option value="">Select Class</option>';
+            classDropdown.disabled = true;
+            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+            subjectDropdown.disabled = true;
+
+            if (sessionId) {
+                fetchClasses(sessionId);
+            }
+        });
+
+        document.getElementById('classDropdown').addEventListener('change', function () {
+            const classId = this.value;
+            const subjectDropdown = document.getElementById('sectionDropdown');
+            
+            // Reset subjects
+            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+            subjectDropdown.disabled = true;
+
+            if (classId) {
+                fetchSubjects(classId);
+            }
+        });
+
+        // Modal Cascading logic
+        document.getElementById('modalSession').addEventListener('change', function () {
+            const sessionId = this.value;
+            const classDropdown = document.getElementById('modalClass');
+            const subjectDropdown = document.getElementById('modalSubject');
+            
+            classDropdown.innerHTML = '<option value="">Select Class</option>';
+            classDropdown.disabled = true;
+            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+            subjectDropdown.disabled = true;
+
+            if (sessionId) {
+                fetchClasses(sessionId, 'modalClass');
+            }
+        });
+
+        document.getElementById('modalClass').addEventListener('change', function () {
+            const classId = this.value;
+            const subjectDropdown = document.getElementById('modalSubject');
+            
+            subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+            subjectDropdown.disabled = true;
+
+            if (classId) {
+                fetchSubjects(classId, 'modalSubject');
+            }
+        });
+
+        function fetchClasses(sessionId, targetId = 'classDropdown') {
+            fetch(`/ClassSection/GetClassesBySession?sessionId=${sessionId}`, {
+                method: 'GET',
+                headers: {
+                    'accept': '*/*'
+                }
+            })
+            .then(response => response.json())
+            .then(res => {
+                const classDropdown = document.getElementById(targetId);
+                classDropdown.innerHTML = '<option value="">Select Class</option>';
+                if (res.isSuccess && res.responseData && res.responseData.length > 0) {
+                    classDropdown.disabled = false;
+                    res.responseData.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.classId;
+                        opt.textContent = c.className;
+                        classDropdown.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching classes:', err));
+        }
+
+        function fetchSubjects(classId, targetId = 'sectionDropdown') {
+            fetch(`/ClassSection/GetSubjectsByClassId?classId=${classId}`, {
+                method: 'GET',
+                headers: {
+                    'accept': '*/*'
+                }
+            })
+            .then(response => response.json())
+            .then(res => {
+                const subjectDropdown = document.getElementById(targetId);
+                subjectDropdown.innerHTML = '<option value="">Select Subject</option>';
+                if (res.isSuccess && res.responseData && res.responseData.length > 0) {
+                    subjectDropdown.disabled = false;
+                    res.responseData.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.subjectId;
+                        opt.textContent = s.subjectName;
+                        subjectDropdown.appendChild(opt);
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching subjects:', err));
+        }
+
+        // Handle Add Download Submission
+        document.getElementById('btnUploadSubmit').addEventListener('click', function() {
+            const notificationId = document.getElementById('notificationId').value;
+            const actionType = document.getElementById('actionType').value;
+            const title = document.getElementById('uploadTitle').value;
+            const classId = document.getElementById('modalClass').value;
+            const subjectId = document.getElementById('modalSubject').value;
+            const uploadType = document.getElementById('modalUploadType').value;
+            const fileInput = document.getElementById('uploadFile');
+            
+            if (!title || !classId || !subjectId || !uploadType || (actionType == "1" && fileInput.files.length === 0)) {
+                toastr.warning('All fields are required.');
+                return;
+            }
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = file.name.toLowerCase();
+                if (!fileName.endsWith('.pdf')) {
+                    toastr.error('Only PDF files are allowed.');
+                    return;
+                }
+            } else if (actionType == "1") { // If actionType is "1" (add) and no file is selected, this should have been caught by the initial validation.
+                toastr.warning('Please select a file to upload.');
+                return;
+            }
+
+
+            const formData = new FormData();
+            formData.append('NotificationID', notificationId);
+            formData.append('ActionType', actionType);
+            formData.append('Title', title);
+            formData.append('FilePath', document.getElementById('existingFilePath').value);
+            if (fileInput.files.length > 0) {
+                formData.append('File', fileInput.files[0]);
+            }
+            formData.append('ClassIdFk', classId);
+            formData.append('SubjectId', subjectId);
+            formData.append('UploadType', uploadType);
+
+            const btnSubmit = document.getElementById('btnUploadSubmit');
+            const originalText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            btnSubmit.disabled = true;
+
+            fetch('/ClassSection/AddDownload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.isSuccess) {
+                    toastr.success(actionType == "1" ? 'File uploaded successfully!' : 'Document updated successfully!');
+                    
+                    // Close Modal
+                    const modalEl = document.getElementById('addDownloadModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    // Refresh List
+                    fetchDownloadList();
+                } else {
+                    toastr.error('Operation failed: ' + res.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                toastr.error('An error occurred.');
+            })
+            .finally(() => {
+                btnSubmit.innerHTML = originalText;
+                btnSubmit.disabled = false;
+            });
+        });
+
+        const apiBaseUrl = '@Configuration["Api:BaseUrl"]';
+
+        let currentDownloadList = [];
+
+        function fetchDownloadList() {
+            const classId = document.getElementById('classDropdown').value;
+            const subjectId = document.getElementById('sectionDropdown').value;
+            const uploadType = document.getElementById('uploadTypeDropdown').value;
+
+            if (!classId || !subjectId || !uploadType) {
+                document.getElementById('downloadListCard').style.display = 'none';
+                return;
+            }
+
+            fetch(`/ClassSection/GetDownloadTable?classId=${classId}&subjectId=${subjectId}&uploadType=${uploadType}`)
+                .then(response => response.json())
+                .then(res => {
+                    const card = document.getElementById('downloadListCard');
+                    const tbody = document.getElementById('downloadTableBody');
+                    const noData = document.getElementById('noDataMessage');
+                    
+                    card.style.display = 'block';
+                    tbody.innerHTML = '';
+                    currentDownloadList = [];
+                    
+                    if (res.isSuccess && res.responseData && res.responseData.length > 0) {
+                        currentDownloadList = res.responseData;
+                        noData.style.display = 'none';
+                        currentDownloadList.forEach((item, index) => {
+                            const tr = document.createElement('tr');
+                            tr.className = "text-center";
+                            
+                            let displayDate = item.notificationDate || item.date || 'N/A';
+                            if (displayDate !== 'N/A' && displayDate.includes(' ')) {
+                                displayDate = displayDate.split(' ')[0];
+                            }
+                            const filePath = item.filePath || item.filepath || '';
+                            
+                            tr.innerHTML = `
+                                <td class="fw-bold text-secondary">${index + 1}</td>
+                                <td class="text-secondary fw-medium">${displayDate}</td>
+                                <td>
+                                    <h6 class="mb-0 fw-bold text-dark text-center">${item.title}</h6>
+                                </td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-sm fw-semibold" onclick="openEditModal(${index})">
+                                            <i class="bi bi-pencil-square me-1"></i> Edit
+                                        </button>
+                                        <a href="${apiBaseUrl}${filePath}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-semibold">
+                                            <i class="bi bi-file-earmark-pdf me-1"></i> View
+                                        </a>
+                                    </div>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        noData.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching download list:', err);
+                    toastr.error('Failed to load documents.');
+                });
+        }
+
+        // Add listeners to main page dropdowns
+        document.getElementById('classDropdown').addEventListener('change', fetchDownloadList);
+        document.getElementById('sectionDropdown').addEventListener('change', fetchDownloadList);
+        document.getElementById('uploadTypeDropdown').addEventListener('change', fetchDownloadList);
+
+        function syncModalDropdowns() {
+            // Sync main filters to modal
+            document.getElementById('modalSession').value = document.getElementById('sessionDropdown').value;
+            
+            const classVal = document.getElementById('classDropdown').value;
+            const classDropdown = document.getElementById('modalClass');
+            classDropdown.innerHTML = document.getElementById('classDropdown').innerHTML;
+            classDropdown.value = classVal;
+            classDropdown.disabled = false;
+
+            const subjectVal = document.getElementById('sectionDropdown').value;
+            const subjectDropdown = document.getElementById('modalSubject');
+            subjectDropdown.innerHTML = document.getElementById('sectionDropdown').innerHTML;
+            subjectDropdown.value = subjectVal;
+            subjectDropdown.disabled = false;
+
+            document.getElementById('modalUploadType').value = document.getElementById('uploadTypeDropdown').value;
+        }
+
+        function openAddModal() {
+            document.getElementById('addDownloadForm').reset();
+            document.getElementById('notificationId').value = "0";
+            document.getElementById('actionType').value = "1";
+            document.getElementById('existingFilePath').value = "";
+            document.getElementById('modalHeader').style.background = "linear-gradient(180deg, #1e3a8a, #2563eb)";
+            document.getElementById('modalHeader').className = "modal-header text-white";
+            document.getElementById('addDownloadModalLabel').innerHTML = '<i class="bi bi-upload me-2"></i> Upload New File';
+            document.getElementById('currentFileDisplay').style.display = 'none';
+            
+            // Ensure cascading dropdowns are reset and disabled
+            document.getElementById('modalClass').innerHTML = '<option value="">Select Class</option>';
+            document.getElementById('modalClass').disabled = true;
+            document.getElementById('modalSubject').innerHTML = '<option value="">Select Subject</option>';
+            document.getElementById('modalSubject').disabled = true;
+
+            const modal = new bootstrap.Modal(document.getElementById('addDownloadModal'));
+            modal.show();
+        }
+
+        function openEditModal(index) {
+            const item = currentDownloadList[index];
+            if (!item) return;
+
+            document.getElementById('addDownloadForm').reset();
+            document.getElementById('notificationId').value = item.notificationID || item.notificationId;
+            document.getElementById('actionType').value = "2";
+            document.getElementById('modalHeader').style.background = "linear-gradient(180deg, #1e3a8a, #2563eb)";
+            document.getElementById('modalHeader').className = "modal-header text-white";
+            document.getElementById('addDownloadModalLabel').innerHTML = '<i class="bi bi-pencil-square me-2"></i> Edit Document';
+            
+            document.getElementById('uploadTitle').value = item.title;
+            
+            const filePath = item.filePath || item.filepath;
+            document.getElementById('existingFilePath').value = filePath || "";
+            if (filePath) {
+                document.getElementById('currentFileDisplay').style.display = 'block';
+                document.getElementById('currentFileName').innerText = filePath.split('/').pop();
+            } else {
+                document.getElementById('currentFileDisplay').style.display = 'none';
+            }
+
+            syncModalDropdowns();
+            
+            const modal = new bootstrap.Modal(document.getElementById('addDownloadModal'));
+            modal.show();
+        }
+    </script>
+}

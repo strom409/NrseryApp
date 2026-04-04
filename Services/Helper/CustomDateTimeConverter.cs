@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace MVC_Project.Services.Variety
+namespace MVC_Project.Services.Helper
 {
     public class CustomDateTimeConverter : JsonConverter<DateTime?>
     {

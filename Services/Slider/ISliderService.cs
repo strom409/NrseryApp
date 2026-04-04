@@ -1,5 +1,5 @@
 using MVC_Project.Models.Slider;
-using MVC_Project.Services.Variety;
+using MVC_Project.Services.Helper;
 
 namespace MVC_Project.Services.Slider
 {

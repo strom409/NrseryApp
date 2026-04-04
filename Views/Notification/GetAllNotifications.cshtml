@@ -1,6 +1,8 @@
-﻿@model List<MVC_Project.Models.Notification.NotificationResponse>
+@model List<MVC_Project.Models.Notification.NotificationResponse>
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Notifications";
+    var apiBaseUrl = Configuration["Api:BaseUrl"];
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -77,47 +79,48 @@
     <div class="card shadow border-0 rounded-4">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" style="font-size:14px;">
-                <thead style="background:#1e293b; color:white;">
+                <thead class="table-light text-center" style="background:#1e293b; color:white;">
                     <tr>
-                        <th style="width:70px;">Image</th>
-                        <th style="width:200px;">Title</th>
-                        <th>Description</th>
-                        <th style="width:110px;">Date</th>
-                        <th style="width:80px;">Action</th>
+                        <th style="width: 8%;">S.No</th>
+                        <th style="width: 22%;">Title</th>
+                        <th style="width: 45%;">Description</th>
+                        <th style="width: 10%;">Date</th>
+                        <th style="width: 15%;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @{ int sno = 1; }
                     @foreach (var item in Model)
                     {
-                        <tr>
-                            <td>
-                                @if (!string.IsNullOrEmpty(item.FilePath) && item.FilePath != "#")
-                                {
-                                    <img src="@item.FilePath"
-                                         style="width:45px;height:45px;object-fit:cover;border-radius:8px;"
-                                         onerror="this.src='https://via.placeholder.com/45'" />
-                                }
-                                else
-                                {
-                                    <div style="width:45px;height:45px;background:#e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                                        <i class="bi bi-image text-muted"></i>
-                                    </div>
-                                }
-                            </td>
+                        <tr class="text-center">
+                            <td class="fw-bold text-secondary">@(sno++)</td>
                             <td class="fw-semibold">@item.Title</td>
                             <td>
-                                <span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                <span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; text-align: center;">
                                     @item.Description
                                 </span>
                             </td>
-                            <td class="text-muted">
+                            <td class="text-muted fw-medium">
                                 @(item.NotificationDate?.Length >= 10 ? item.NotificationDate.Substring(0, 10) : item.NotificationDate)
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-warning"
-                                        onclick="openEditModal(@item.NotificationId, '@Html.Raw(Uri.EscapeDataString(item.Title))', '@Html.Raw(Uri.EscapeDataString(item.Description))', '@item.FilePath', '@item.NotificationDate')">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                                <div class="d-flex justify-content-center">
+                                    <div class="d-flex gap-2" style="width: 180px; justify-content: flex-start;">
+                                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 shadow-sm fw-semibold d-flex align-items-center justify-content-center" 
+                                                style="width: 85px; border-width: 2px;"
+                                                onclick="openEditModal(@item.NotificationId, '@Html.Raw(Uri.EscapeDataString(item.Title ?? ""))', '@Html.Raw(Uri.EscapeDataString(item.Description ?? ""))', '@Html.Raw(Uri.EscapeDataString(item.FilePath ?? ""))', '@Html.Raw(Uri.EscapeDataString(item.NotificationDate ?? ""))')">
+                                            <i class="bi bi-pencil-square me-1"></i> Edit
+                                        </button>
+                                        @if (!string.IsNullOrEmpty(item.FilePath) && item.FilePath != "#")
+                                        {
+                                            <a href="@apiBaseUrl@item.FilePath" target="_blank" 
+                                               class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-semibold d-flex align-items-center justify-content-center" 
+                                               style="width: 85px; background: #2563eb; border-color: #2563eb;">
+                                                <i class="bi bi-file-earmark-pdf me-1"></i> View
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -149,12 +152,11 @@
                         <textarea name="Description" id="modalDescription" class="form-control" rows="4"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label>Photo (Optional)</label>
-                        <input type="file" id="photoInput" class="form-control" accept="image/*" onchange="previewPhoto(this)" />
+                        <label class="fw-semibold">File (PDF only)</label>
+                        <input type="file" id="photoInput" class="form-control" accept=".pdf" onchange="previewPhoto(this)" />
                         <input type="hidden" name="Filepath" id="modalFilepath" />
-                        <div class="text-center mt-2">
-                            <img id="photoPreview" src="https://via.placeholder.com/80"
-                                 style="width:80px;height:80px;object-fit:cover;border-radius:8px;display:none;" />
+                        <div id="pdfMessage" class="mt-2 small text-muted" style="display:none;">
+                            <i class="bi bi-file-earmark-pdf text-danger"></i> PDF selected.
                         </div>
                     </div>
                 </div>
@@ -179,7 +181,8 @@
             document.getElementById('modalDescription').value = '';
             document.getElementById('modalFilepath').value = '';
             document.getElementById('modalDate').value = new Date().toISOString();
-            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('pdfMessage').style.display = 'none';
+            document.getElementById('photoInput').value = '';
             notificationModal.show();
         }
 
@@ -189,14 +192,16 @@
             document.getElementById('modalActionType').value = '2';
             document.getElementById('modalTitle2').value = decodeURIComponent(title);
             document.getElementById('modalDescription').value = decodeURIComponent(description);
-            document.getElementById('modalFilepath').value = filepath;
-            document.getElementById('modalDate').value = date;
-            var preview = document.getElementById('photoPreview');
-            if (filepath && filepath !== '#') {
-                preview.src = filepath;
-                preview.style.display = 'inline-block';
+            
+            const decodedFilepath = decodeURIComponent(filepath);
+            document.getElementById('modalFilepath').value = decodedFilepath;
+            document.getElementById('modalDate').value = decodeURIComponent(date);
+            
+            var pdfMsg = document.getElementById('pdfMessage');
+            if (decodedFilepath && decodedFilepath !== '#') {
+                pdfMsg.style.display = 'block';
             } else {
-                preview.style.display = 'none';
+                pdfMsg.style.display = 'none';
             }
             notificationModal.show();
         }
@@ -204,11 +209,18 @@
         function previewPhoto(input) {
             const file = input.files[0];
             if (!file) return;
+
+            if (file.type !== "application/pdf") {
+                toastr.error("Only PDF files are allowed.");
+                input.value = "";
+                document.getElementById('pdfMessage').style.display = 'none';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = e => {
-                document.getElementById('photoPreview').src = e.target.result;
-                document.getElementById('photoPreview').style.display = 'inline-block';
                 document.getElementById('modalFilepath').value = e.target.result;
+                document.getElementById('pdfMessage').style.display = 'block';
             };
             reader.readAsDataURL(file);
         }

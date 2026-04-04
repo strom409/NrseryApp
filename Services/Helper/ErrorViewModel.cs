@@ -1,4 +1,4 @@
-﻿namespace MVC_Project.Services.Variety
+﻿namespace MVC_Project.Services.Helper
 {
     public class ErrorViewModel
     {

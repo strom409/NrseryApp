@@ -1,4 +1,4 @@
-﻿namespace MVC_Project.Services.Variety
+namespace MVC_Project.Services.Helper
 {
     public class ApiResponse<T>
     {
@@ -6,6 +6,7 @@
         public string? Message { get; set; }
         public int Status { get; set; }
         [System.Text.Json.Serialization.JsonPropertyName("data")]
+        [Newtonsoft.Json.JsonProperty("data")]
         public T? ResponseData { get; set; }
         public object? Error { get; set; }
     }

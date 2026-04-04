@@ -4,11 +4,11 @@ using MVC_Project.Models.Auth;
 using MVC_Project.Models.Slider;
 using MVC_Project.Options;
 using Microsoft.Extensions.Options;
-using MVC_Project.Services.Variety;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using MVC_Project.Services.Helper;
 
 namespace MVC_Project.Services.Slider
 {

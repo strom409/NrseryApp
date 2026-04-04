@@ -1,0 +1,455 @@
+@model IEnumerable<MVC_Project.Models.Notification.NotificationResponse>
+@{
+    ViewData["Title"] = "Circular";
+}
+
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
+            <h6 class="m-0 font-weight-bold">
+                <i class="bi bi-file-earmark-text me-2"></i>Circular Management
+            </h6>
+            <button type="button" class="btn btn-light btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addCircularModal">
+                <i class="bi bi-plus-lg me-1"></i>Add Circular
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Select Class</label>
+                    <select id="classDropdown" class="form-select border-primary shadow-sm">
+                        <option value="">-- Select Class --</option>
+                        @if (ViewBag.Classes != null)
+                        {
+                            foreach (var item in ViewBag.Classes)
+                            {
+                                <option value="@item.ClassId">@item.ClassName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Select Section</label>
+                    <select id="sectionDropdown" class="form-select border-primary shadow-sm" disabled>
+                        <option value="">-- Select Section --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="circularContent" class="mt-4">
+                <!-- Circular data will be loaded here -->
+                <div class="text-center text-muted py-5 border rounded bg-light">
+                    <i class="bi bi-info-circle fs-2 d-block mb-3"></i>
+                    <p>Please select a Class and Section to view Circulars.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Circular Modal -->
+<div class="modal fade" id="addCircularModal" tabindex="-1" aria-labelledby="addCircularModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1e3a8a, #2563eb);">
+                <h5 class="modal-title" id="addCircularModalLabel"><i class="bi bi-plus-circle me-2"></i><span id="modalActionTitle">Add New</span> Circular</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addCircularForm">
+                    <input type="hidden" id="notificationID" value="0">
+                    <input type="hidden" id="existingFilePath" value="">
+                    <div id="modalSelectionRow" class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Class</label>
+                            <select id="modalClassDropdown" class="form-select" required>
+                                <option value="">-- Select Class --</option>
+                                @if (ViewBag.Classes != null)
+                                {
+                                    foreach (var item in ViewBag.Classes)
+                                    {
+                                        <option value="@item.ClassId">@item.ClassName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-600">Section</label>
+                            <select id="modalSectionDropdown" class="form-select" required disabled>
+                                <option value="">-- Select Section --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-600">Title</label>
+                            <input type="text" id="circularTitle" class="form-control" placeholder="Enter circular title" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Detail</label>
+                            <textarea id="circularDetail" class="form-control" rows="4" placeholder="Enter circular details" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-600">Upload Circular (Image/PDF)</label>
+                            <div id="currentFileDisplay" class="mb-2 d-none">
+                                <small class="text-muted d-block mb-1">Current File:</small>
+                                <div class="d-flex align-items-center bg-light p-2 rounded border">
+                                    <i class="bi bi-file-earmark-check text-success me-2 fs-5"></i>
+                                    <a id="currentFileLink" href="#" target="_blank" class="text-truncate text-primary text-decoration-none small" style="max-width: 250px;">filename.pdf</a>
+                                </div>
+                            </div>
+                            <input type="file" id="circularFile" class="form-control" accept="image/*,.pdf" required>
+                            <div class="form-text mt-2">Maximum file size: 5MB. Accepted formats: JPG, PNG, PDF.</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light p-3">
+                <button type="button" class="btn btn-secondary border-0 px-4" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="btnSaveCircular" class="btn btn-primary border-0 px-4">
+                    <span id="saveBtnText">Save Circular</span>
+                    <span id="saveBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="modal-title" id="previewTitle">File Preview</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 bg-light text-center">
+                <div id="previewSpinner" class="py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+                <img id="previewImage" src="" class="img-fluid d-none" style="max-height: 80vh;" />
+                <iframe id="previewPdf" src="" class="d-none" style="width: 100%; height: 80vh; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Reset modal for "Add" action
+            $('[data-bs-target="#addCircularModal"]').click(function() {
+                $('#modalActionTitle').text('Add New');
+                $('#addCircularForm')[0].reset();
+                $('#notificationID').val('0');
+                $('#existingFilePath').val('');
+                $('#currentFileDisplay').addClass('d-none');
+                $('#modalSelectionRow').removeClass('d-none');
+                $('#modalSectionDropdown').prop('disabled', true);
+                $('#circularFile').prop('required', true);
+            });
+
+            // Global function for Edit
+            window.editCircular = function(item) {
+                var nid = item.cid || item.notificationID || 0;
+                var cid = item.classidID || item.categoryID || $('#classDropdown').val();
+                var sid = item.sectionID || item.userTypeID || $('#sectionDropdown').val();
+                
+                // Hide selection row for Edit
+                $('#modalSelectionRow').addClass('d-none');
+                
+                // Show loading before opening modal
+                toastr.info("Fetching details...");
+                
+                $.ajax({
+                    url: '@Url.Action("GetCircularById", "Home")',
+                    type: 'GET',
+                    data: { classId: cid, sectionId: sid, notificationId: nid },
+                    success: function (response) {
+                        if (response.isSuccess && response.data) {
+                            var data = response.data;
+                            console.log('Fetched single item:', data);
+                            
+                            var nid_fetched = data.cid || data.notificationID || nid;
+                            var cid_fetched = data.classidID || data.categoryID || cid;
+                            var sid_fetched = data.sectionID || data.userTypeID || sid;
+                            
+                            $('#modalActionTitle').text('Update');
+                            $('#notificationID').val(nid_fetched);
+                            $('#circularTitle').val(data.title || '');
+                            $('#circularDetail').val(data.detail || data.description || '');
+                            $('#existingFilePath').val(data.filePath || data.filepath || '');
+                            
+                            // Show current file
+                            var fpath = data.filePath || data.filepath;
+                            if (fpath) {
+                                $('#currentFileDisplay').removeClass('d-none');
+                                $('#currentFileLink').attr('href', fpath).text(fpath.split('/').pop());
+                                $('#circularFile').prop('required', false);
+                            } else {
+                                $('#currentFileDisplay').addClass('d-none');
+                                $('#circularFile').prop('required', true);
+                            }
+
+                            // Selection logic
+                            if (cid_fetched) {
+                                console.log('Selecting Class:', cid_fetched);
+                                $('#modalClassDropdown').val(cid_fetched.toString()).trigger('change');
+                                
+                                // Wait for sections to load before setting section
+                                var retryCount = 0;
+                                var checkSectionExist = setInterval(function() {
+                                    retryCount++;
+                                    var $option = $('#modalSectionDropdown option[value="' + sid_fetched + '"]');
+                                    if ($option.length > 0) {
+                                        console.log('Selecting Section:', sid_fetched);
+                                        $('#modalSectionDropdown').val(sid_fetched.toString());
+                                        clearInterval(checkSectionExist);
+                                    } else if (retryCount > 30) { // 3 seconds timeout
+                                        console.warn('Section option not found after 3s:', sid_fetched);
+                                        clearInterval(checkSectionExist);
+                                    }
+                                }, 100);
+                            }
+
+                            $('#addCircularModal').modal('show');
+                        } else {
+                            toastr.error(response.message || "Failed to fetch circular details.");
+                        }
+                    },
+                    error: function () {
+                        toastr.error("Error connecting to server.");
+                    }
+                });
+            };
+
+            // Global function for preview
+            window.viewFile = function(url, title) {
+                var isPdf = url.toLowerCase().endsWith('.pdf');
+                var isImage = /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+                
+                $('#previewTitle').text(title || 'File Preview');
+                $('#previewSpinner').removeClass('d-none');
+                $('#previewImage').addClass('d-none');
+                $('#previewPdf').addClass('d-none');
+                
+                // Use proxy to avoid mixed content issues
+                var proxyUrl = '@Url.Action("Image", "Home")' + '?path=' + encodeURIComponent(url);
+
+                if (isImage) {
+                    $('#previewImage').attr('src', proxyUrl).on('load', function() {
+                        $('#previewSpinner').addClass('d-none');
+                        $(this).removeClass('d-none');
+                    });
+                    $('#previewModal').modal('show');
+                } else if (isPdf) {
+                    // For PDFs, we still open in new tab as iframes can be tricky with proxy sometimes
+                    window.open(proxyUrl, '_blank');
+                } else {
+                    window.open(proxyUrl, '_blank');
+                }
+            };
+            // Helper function to handle cascading dropdowns
+            function setupCascadingDropdown($classElem, $sectionElem) {
+                $classElem.change(function () {
+                    var classId = $(this).val();
+                    $sectionElem.empty().append('<option value="">-- Select Section --</option>');
+
+                    if (classId) {
+                        $.ajax({
+                            url: '@Url.Action("GetSectionsByClassId", "ClassSection")',
+                            type: 'GET',
+                            data: { classId: classId },
+                            success: function (response) {
+                                if (response.isSuccess && response.responseData) {
+                                    $.each(response.responseData, function (i, item) {
+                                        $sectionElem.append($('<option></option>').val(item.sectionId).html(item.sectionName));
+                                    });
+                                    $sectionElem.prop('disabled', false);
+                                } else {
+                                    toastr.warning(response.message || "No sections found.");
+                                    $sectionElem.prop('disabled', true);
+                                }
+                            },
+                            error: function () {
+                                toastr.error("Error fetching sections.");
+                            }
+                        });
+                    } else {
+                        $sectionElem.prop('disabled', true);
+                    }
+                });
+            }
+
+            // Setup dropdowns for main view and modal
+            setupCascadingDropdown($('#classDropdown'), $('#sectionDropdown'));
+            setupCascadingDropdown($('#modalClassDropdown'), $('#modalSectionDropdown'));
+
+            // Load circulars when section is changed in main view
+            $('#sectionDropdown').change(function () {
+                var sectionId = $(this).val();
+                var classId = $('#classDropdown').val();
+                if (sectionId && classId) {
+                    loadCirculars(classId, sectionId);
+                }
+            });
+
+            function loadCirculars(classId, sectionId) {
+                $('#circularContent').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading Circulars...</p></div>');
+                
+                $.ajax({
+                    url: '@Url.Action("GetCircularData", "Home")',
+                    type: 'GET',
+                    data: { classId: classId, sectionId: sectionId },
+                    success: function (response) {
+                        if (response.isSuccess && response.responseData && response.responseData.length > 0) {
+                            var html = '<div class="table-responsive shadow-sm rounded border">';
+                            html += '<table class="table table-hover align-middle mb-0">';
+                            html += '<thead class="bg-light text-primary fw-bold">';
+                            html += '<tr><th>S.No</th><th>Title</th><th>Date</th><th>Description</th><th class="text-center">Action</th></tr>';
+                            html += '</thead><tbody>';
+                            
+                            $.each(response.responseData, function (i, item) {
+                                var dateStr = item.notificationDate ? new Date(item.notificationDate).toLocaleDateString() : 'N/A';
+                                var fileLink = item.filePath || item.filepath || '#';
+                                var isPdf = fileLink && fileLink.toLowerCase().endsWith('.pdf');
+                                
+                                html += '<tr>';
+                                html += '<td>' + (i + 1) + '</td>';
+                                html += '<td class="fw-bold">' + (item.title || 'No Title') + '</td>';
+                                html += '<td>' + dateStr + '</td>';
+                                html += '<td class="text-muted small" style="max-width: 300px;">' + (item.detail || item.description || '') + '</td>';
+                                html += '<td class="text-center">';
+                                html += '<div class="btn-group shadow-none">';
+                                if (fileLink && fileLink !== '#') {
+                                    var safeTitle = (item.title || 'Circular').replace(/'/g, "\\'");
+                                    html += '<button type="button" onclick="viewFile(\'' + fileLink + '\', \'' + safeTitle + '\')" class="btn btn-sm btn-info text-white rounded-pill px-3 me-1" title="View File">';
+                                    html += '<i class="bi ' + (isPdf ? 'bi-file-pdf' : 'bi-eye') + '"></i></button>';
+                                }
+                                html += '<button type="button" onclick=\'editCircular(' + JSON.stringify(item) + ')\' class="btn btn-sm btn-warning text-white rounded-pill px-3" title="Edit Circular">';
+                                html += '<i class="bi bi-pencil-square"></i></button>';
+                                html += '</div></td></tr>';
+                            });
+                            
+                            html += '</tbody></table></div>';
+                            $('#circularContent').html(html);
+                        } else {
+                            $('#circularContent').html('<div class="text-center text-muted py-5 border rounded bg-light"><i class="bi bi-info-circle fs-2 d-block mb-3"></i><p>' + (response.message || "No Circulars found for this selection.") + '</p></div>');
+                        }
+                    },
+                    error: function () {
+                        toastr.error("Error fetching circular data.");
+                        $('#circularContent').html('<div class="alert alert-danger">Failed to load circulars. Please try again.</div>');
+                    }
+                });
+            }
+
+            // Handle Save Circular
+            $('#btnSaveCircular').click(async function () {
+                var notificationID = $('#notificationID').val();
+                var classId = $('#modalClassDropdown').val();
+                var sectionId = $('#modalSectionDropdown').val();
+                var className = $('#modalClassDropdown option:selected').text();
+                var sectionName = $('#modalSectionDropdown option:selected').text();
+                var title = $('#circularTitle').val();
+                var detail = $('#circularDetail').val();
+                var fileInput = document.getElementById('circularFile');
+                var actionType = (notificationID && notificationID != '0') ? 2 : 1;
+
+                if (!classId || !sectionId || !title || !detail) {
+                    toastr.warning("Please fill all required fields.");
+                    return;
+                }
+
+                // File is only strictly required for "Add" (actionType 1)
+                if (actionType === 1 && fileInput.files.length === 0) {
+                    toastr.warning("Please select a file for the new circular.");
+                    return;
+                }
+
+                toggleSaveLoading(true);
+
+                try {
+                    var base64 = "";
+                    var extension = "";
+
+                    if (fileInput.files.length > 0) {
+                        var file = fileInput.files[0];
+                        base64 = await convertFileToBase64(file);
+                        extension = "." + file.name.split('.').pop();
+                    }
+
+                    var model = {
+                        cid: parseInt(notificationID),
+                        classidID: parseInt(classId),
+                        sectionID: parseInt(sectionId),
+                        className: className,
+                        sectionName: sectionName,
+                        title: title,
+                        detail: detail,
+                        updatedBy: "Admin",
+                        filePath: base64,
+                        fileExtension: extension,
+                        actionType: actionType
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("AddOrUpdateCircular", "Home")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(model),
+                        success: function (response) {
+                            if (response.isSuccess) {
+                                toastr.success(response.message || "Circular saved successfully!");
+                                $('#addCircularModal').modal('hide');
+                                $('#addCircularForm')[0].reset();
+                                $('#modalSectionDropdown').prop('disabled', true);
+                                
+                                // Refresh list if Class and Section match the current selection
+                                var selectedClass = $('#classDropdown').val();
+                                var selectedSection = $('#sectionDropdown').val();
+                                if (selectedClass == classId && selectedSection == sectionId) {
+                                    loadCirculars(classId, sectionId);
+                                }
+                            } else {
+                                toastr.error(response.message || "Failed to save circular.");
+                            }
+                            toggleSaveLoading(false);
+                        },
+                        error: function () {
+                            toastr.error("An error occurred while saving the circular.");
+                            toggleSaveLoading(false);
+                        }
+                    });
+                } catch (error) {
+                    toastr.error("Error processing file: " + error.message);
+                    toggleSaveLoading(false);
+                }
+            });
+
+            function convertFileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => {
+                        let base64 = reader.result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = error => reject(error);
+                });
+            }
+
+            function toggleSaveLoading(isLoading) {
+                if (isLoading) {
+                    $('#btnSaveCircular').prop('disabled', true);
+                    $('#saveBtnText').addClass('d-none');
+                    $('#saveBtnSpinner').removeClass('d-none');
+                } else {
+                    $('#btnSaveCircular').prop('disabled', false);
+                    $('#saveBtnText').removeClass('d-none');
+                    $('#saveBtnSpinner').addClass('d-none');
+                }
+            }
+        });
+    </script>
+}
