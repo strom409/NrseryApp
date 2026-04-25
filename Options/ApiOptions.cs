@@ -11,5 +11,7 @@ namespace MVC_Project.Options
         public string Login { get; set; } = string.Empty;
         public string Notification { get; set; } = string.Empty;
         public string Slider { get; set; } = string.Empty;
+        public string StudentMessage { get; set; } = string.Empty;
+        public string StudentDetail { get; set; } = string.Empty;
     }
 }

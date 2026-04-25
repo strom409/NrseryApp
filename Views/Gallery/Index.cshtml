@@ -1,0 +1,265 @@
+@model MVC_Project.Models.Gallery.GalleryViewModel
+@{
+    ViewData["Title"] = "Gallery Management";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary mb-0"><i class="bi bi-images me-2"></i> Gallery Management</h2>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addHeadingModal">
+                <i class="bi bi-tag me-1"></i> Add Gallery Heading
+            </button>
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#addGalleryModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Gallery Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Category Selector -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-muted">Select Gallery Category to View</label>
+                    <select id="categorySelector" class="form-select form-select-lg border-2 shadow-none rounded-3">
+                        <option value="">-- Choose a Category --</option>
+                        @if (Model.GalleryHeadings != null)
+                        {
+                            foreach (var item in Model.GalleryHeadings)
+                            {
+                                <option value="@item.Gid">@item.GalleryHeadingName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <span id="itemCount" class="badge bg-soft-primary text-primary px-4 py-2 rounded-pill fw-bold">0 Items Found</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Items Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="galleryTable">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 border-0 py-3 text-muted fw-bold">PHOTO</th>
+                            <th class="border-0 py-3 text-muted fw-bold">ADDED BY</th>
+                            <th class="text-end pe-4 border-0 py-3 text-muted fw-bold">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="galleryTableBody">
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-info-circle fs-2 d-block mb-2 opacity-50"></i>
+                                    Please select a category above to view gallery items
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Adding Gallery Item -->
+<div class="modal fade" id="addGalleryModal" tabindex="-1" aria-labelledby="addGalleryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-primary" id="addGalleryModalLabel">Add New Gallery Item</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="Upload" method="post" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Gallery Category</label>
+                        <select asp-for="SelectedGid" class="form-select border-2 shadow-none rounded-3" required>
+                            <option value="">-- Select Category --</option>
+                            @if (Model.GalleryHeadings != null)
+                            {
+                                foreach (var item in Model.GalleryHeadings)
+                                {
+                                    <option value="@item.Gid">@item.GalleryHeadingName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Photo Upload</label>
+                        <div class="upload-container text-center p-4 border-2 border-dashed rounded-4 bg-light position-relative">
+                            <input asp-for="Photo" type="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0 cursor-pointer" accept="image/*" onchange="previewImage(this)" required />
+                            <div id="uploadPlaceholder">
+                                <i class="bi bi-cloud-arrow-up fs-1 text-muted"></i>
+                                <p class="mt-2 text-muted mb-0 fw-bold">Click to upload or drag photo here</p>
+                                <small class="text-muted d-block mt-1">Accepts JPG, PNG, WEBP</small>
+                            </div>
+                            <img id="imagePreview" class="img-fluid rounded-3 d-none shadow-sm mx-auto" style="max-height: 250px;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Upload Gallery Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Adding Gallery Heading -->
+<div class="modal fade" id="addHeadingModal" tabindex="-1" aria-labelledby="addHeadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold text-primary" id="addHeadingModalLabel">Add New Gallery Heading</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label for="newHeadingName" class="form-label fw-bold">Heading Name</label>
+                    <input type="text" id="newHeadingName" class="form-control border-2 shadow-none rounded-3" placeholder="Enter heading name (e.g., Annual Function 2024)" required />
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="saveHeadingBtn" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Save Heading</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#categorySelector').on('change', function() {
+                var gid = $(this).val();
+                if (gid) {
+                    loadGalleryItems(gid);
+                } else {
+                    resetTable();
+                }
+            });
+
+            @if (TempData["Success"] != null)
+            {
+                <text>toastr.success('@TempData["Success"]');</text>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <text>toastr.error('@TempData["Error"]');</text>
+            }
+
+            // Save Gallery Heading
+            $('#saveHeadingBtn').on('click', function() {
+                var headingName = $('#newHeadingName').val();
+                if (!headingName) {
+                    toastr.warning('Please enter a heading name.');
+                    return;
+                }
+
+                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+                $.post('@Url.Action("AddGalleryHeading")', { headingName: headingName }, function(response) {
+                    $('#saveHeadingBtn').prop('disabled', false).text('Save Heading');
+                    if (response.isSuccess) {
+                        toastr.success(response.message || 'Gallery heading added successfully!');
+                        $('#addHeadingModal').modal('hide');
+                        $('#newHeadingName').val('');
+                        // Reload page to refresh dropdowns
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        toastr.error(response.message || 'Failed to add heading.');
+                    }
+                });
+            });
+        });
+
+        function loadGalleryItems(gid) {
+            $('#galleryTableBody').html('<tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted fw-medium">Fetching gallery items...</p></td></tr>');
+            
+            $.get('@Url.Action("GetGalleryItems")', { gid: gid }, function(response) {
+                if (response.isSuccess) {
+                    var html = '';
+                    var items = response.data;
+                    $('#itemCount').text(items.length + ' Items Found');
+
+                    if (items.length > 0) {
+                        items.forEach(function(item) {
+                            var imgUrl = '@Url.Action("Image")' + '?path=' + encodeURIComponent(item.photoPath);
+                            html += '<tr class="gallery-row transition-all">' +
+                                '<td class="ps-4 py-3"><img src="' + imgUrl + '" class="rounded-3 shadow-sm border" style="width: 100px; height: 60px; object-fit: cover;" onerror="this.src=\'https://via.placeholder.com/100x60?text=No+Image\'" /></td>' +
+                                '<td class="py-3"><span class="badge bg-soft-secondary text-primary px-3 py-2 rounded-pill">' + (item.addedBy || 'N/A') + '</span></td>' +
+                                '<td class="text-end pe-4 py-3">' +
+                                    '<button class="btn btn-sm btn-icon-soft-danger rounded-pill px-3 py-2" title="Delete" onclick="deleteItem(' + item.gdid + ')"><i class="bi bi-trash me-1"></i>Delete</button>' +
+                                '</td>' +
+                                '</tr>';
+                        });
+                    } else {
+                        html = '<tr><td colspan="4" class="text-center py-5 text-muted"><div class="py-4"><i class="bi bi-camera-video-off fs-1 d-block mb-3 opacity-25"></i><h5 class="fw-bold">No gallery items found</h5><p class="mb-0">Try selecting another category or add a new item.</p></div></td></tr>';
+                    }
+                    $('#galleryTableBody').html(html);
+                } else {
+                    toastr.error(response.message || 'Failed to load gallery items');
+                    resetTable();
+                }
+            });
+        }
+
+        function deleteItem(gdid) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                $.post('@Url.Action("Delete")', { gdid: gdid }, function(response) {
+                    if (response.isSuccess) {
+                        toastr.success(response.message || 'Deleted successfully');
+                        var gid = $('#categorySelector').val();
+                        if (gid) loadGalleryItems(gid);
+                    } else {
+                        toastr.error(response.message || 'Failed to delete item');
+                    }
+                });
+            }
+        }
+
+        function resetTable() {
+            $('#galleryTableBody').html('<tr><td colspan="4" class="text-center py-5 text-muted"><div class="py-4"><i class="bi bi-info-circle fs-2 d-block mb-2 opacity-50"></i>Please select a category above to view gallery items</div></td></tr>');
+            $('#itemCount').text('0 Items Found');
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+    <style>
+        .bg-soft-primary { background-color: rgba(37, 99, 235, 0.1); }
+        .bg-soft-secondary { background-color: #f3f4f6; }
+        .btn-icon-soft-danger { background-color: rgba(220, 38, 38, 0.1); color: #dc2626; border: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+        .btn-icon-soft-danger:hover { background-color: #dc2626; color: white; transform: scale(1.05); }
+        .border-dashed { border-style: dashed !important; border-color: #d1d5db !important; }
+        .cursor-pointer { cursor: pointer; }
+        .upload-container:hover { border-color: #2563eb !important; background-color: #f0f7ff !important; }
+        .gallery-row:hover { background-color: #f8fafc; }
+        .transition-all { transition: all 0.2s ease-in-out; }
+    </style>
+}

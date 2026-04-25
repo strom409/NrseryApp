@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "View Student Messages";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg p-4 border-0">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="m-0 text-primary fw-bold">📋 View Sent Messages</h4>
+            <a asp-controller="StudentMessage" asp-action="Index" class="btn btn-sm btn-outline-primary shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Send New Message
+            </a>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Select Class</label>
+                <select id="classId" class="form-select select2" onchange="loadSections(this.value)">
+                    <option value="">-- Select Class --</option>
+                    @foreach (var cls in (IEnumerable<MVC_Project.Models.ClassSectionDto>)ViewBag.Classes)
+                    {
+                        <option value="@cls.ClassId">@cls.ClassName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-bold">Select Section</label>
+                <select id="sectionId" class="form-select select2">
+                    <option value="">-- Select Section --</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" onclick="fetchMessages()" class="btn btn-primary w-100 shadow-sm">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <div id="messagesContainer" class="mt-4 d-none">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle border">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="120">Added On</th>
+                            <th>Student</th>
+                            <th width="50">Roll</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th width="150">Added By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTableBody">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="noDataMessage" class="alert alert-info d-none mt-4">
+            <i class="bi bi-info-circle me-2"></i> No messages found for the selected criteria.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <script>
+        async function loadSections(classId) {
+            if (!classId) return;
+            const res = await fetch(`/StudentMessage/GetSections?classId=${classId}`);
+            const result = await res.json();
+            const sectionSelect = document.getElementById('sectionId');
+            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+            
+            if (result.isSuccess && (result.data || result.responseData)) {
+                const data = result.data || result.responseData;
+                data.forEach(s => {
+                    sectionSelect.innerHTML += `<option value="${s.sectionId}">${s.sectionName}</option>`;
+                });
+            }
+        }
+
+        async function fetchMessages() {
+            const classId = document.getElementById('classId').value;
+            const sectionId = document.getElementById('sectionId').value;
+
+            if (!classId || !sectionId) {
+                toastr.warning("Please select both Class and Section.");
+                return;
+            }
+
+            const container = document.getElementById('messagesContainer');
+            const noData = document.getElementById('noDataMessage');
+            const tbody = document.getElementById('messagesTableBody');
+            
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span> Loading...</td></tr>';
+            container.classList.remove('d-none');
+            noData.classList.add('d-none');
+
+            try {
+                const res = await fetch(`/StudentMessage/GetMessagesList?classId=${classId}&sectionId=${sectionId}`);
+                const result = await res.json();
+                tbody.innerHTML = '';
+
+                if (result.isSuccess && (result.data || result.responseData)) {
+                    const messages = result.data || result.responseData;
+                    
+                    if (messages.length === 0) {
+                        container.classList.add('d-none');
+                        noData.classList.remove('d-none');
+                        return;
+                    }
+
+                    messages.forEach(msg => {
+                        const date = new Date(msg.addedOn).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        });
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="small fw-semibold">${date}</td>
+                                <td>
+                                    <div class="fw-bold">${msg.studentName || msg.StudentName}</div>
+                                    <div class="text-muted small">${msg.className || msg.ClassName} - ${msg.sectionName || msg.SectionName}</div>
+                                </td>
+                                <td>${msg.rollNo || msg.RollNo || ""}</td>
+                                <td>${msg.title || msg.Title}</td>
+                                <td class="small text-truncate" style="max-width:300px;" title="${(msg.description || msg.Description || '').replace(/"/g, '&quot;')}">
+                                    ${msg.description || msg.Description}
+                                </td>
+                                <td class="small text-muted">${msg.addedBy || msg.AddedBy}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    container.classList.add('d-none');
+                    noData.classList.remove('d-none');
+                }
+            } catch (e) {
+                toastr.error("Failed to fetch messages.");
+                tbody.innerHTML = '';
+            }
+        }
+    </script>
+
+    <style>
+        .table th { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; background: #f8f9fa; }
+        .text-truncate { cursor: help; }
+    </style>
+}

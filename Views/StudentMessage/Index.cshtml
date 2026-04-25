@@ -1,0 +1,266 @@
+@model MVC_Project.Models.StudentMessage.StudentMessageAddRequest
+@{
+    ViewData["Title"] = "Student Message";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg p-4 border-0">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="m-0 text-primary fw-bold">📢 Student Message Management</h4>
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="scopeType" id="scopeWhole" value="whole" checked onchange="toggleScope()">
+                <label class="btn btn-outline-primary" for="scopeWhole">Whole School</label>
+
+                <input type="radio" class="btn-check" name="scopeType" id="scopeClass" value="class" onchange="toggleScope()">
+                <label class="btn btn-outline-primary" for="scopeClass">By Class Wise</label>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Common Fields -->
+            <div class="col-md-12 mb-2">
+                <label class="form-label fw-semibold">Message Title</label>
+                <input type="text" id="msgTitle" class="form-control" placeholder="Enter message title" required />
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-semibold">Message Description</label>
+                <textarea id="editor" class="form-control"></textarea>
+            </div>
+
+            <!-- Whole School Section -->
+            <div id="wholeSchoolSection" class="col-md-12">
+                <button type="button" onclick="sendWholeSchool()" class="btn btn-primary btn-lg w-100 shadow-sm">
+                    <i class="bi bi-send-fill me-2"></i> Send to Whole School
+                </button>
+            </div>
+
+            <!-- Class Wise Section -->
+            <div id="classWiseSection" class="col-md-12 d-none">
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Class</label>
+                        <select id="classId" class="form-select" onchange="loadSections(this.value)">
+                            <option value="">-- Select Class --</option>
+                            @foreach (var cls in (IEnumerable<MVC_Project.Models.ClassSectionDto>)ViewBag.Classes)
+                            {
+                                <option value="@cls.ClassId">@cls.ClassName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Select Section</label>
+                        <select id="sectionId" class="form-select" onchange="loadStudents(this.value)">
+                            <option value="">-- Select Section --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="studentListContainer" class="mt-4 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0">Students in Section</h5>
+                        <button type="button" id="saveSelectedBtn" onclick="sendSelectedMessages()" class="btn btn-success shadow-sm">
+                            <i class="bi bi-check-circle-fill me-2"></i> Save Selected
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAllStudents" onchange="toggleSelectAll(this)">
+                                        </div>
+                                    </th>
+                                    <th width="50">Roll No</th>
+                                    <th>Name</th>
+                                    <th>Admission No</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+
+    <script>
+        let editorInstance;
+        ClassicEditor
+            .create(document.querySelector('#editor'))
+            .then(editor => { editorInstance = editor; })
+            .catch(error => console.error(error));
+
+        function toggleScope() {
+            const scope = document.querySelector('input[name="scopeType"]:checked').value;
+            if (scope === 'whole') {
+                document.getElementById('wholeSchoolSection').classList.remove('d-none');
+                document.getElementById('classWiseSection').classList.add('d-none');
+            } else {
+                document.getElementById('wholeSchoolSection').classList.add('d-none');
+                document.getElementById('classWiseSection').classList.remove('d-none');
+            }
+        }
+
+        async function loadSections(classId) {
+            if (!classId) return;
+            const res = await fetch(`/StudentMessage/GetSections?classId=${classId}`);
+            const result = await res.json();
+            const sectionSelect = document.getElementById('sectionId');
+            sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+            // ApiResponse uses [JsonPropertyName("data")] for ResponseData
+            if (result.isSuccess && (result.data || result.responseData)) {
+                const data = result.data || result.responseData;
+                data.forEach(s => {
+                    sectionSelect.innerHTML += `<option value="${s.sectionId}">${s.sectionName}</option>`;
+                });
+            }
+        }
+
+        async function loadStudents(sectionId) {
+            if (!sectionId) return;
+            const res = await fetch(`/StudentMessage/GetStudents?sectionId=${sectionId}`);
+            const result = await res.json();
+            const container = document.getElementById('studentListContainer');
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('selectAllStudents').checked = false;
+
+            // ApiResponse uses [JsonPropertyName("data")] for ResponseData
+            if (result.isSuccess && (result.data || result.responseData)) {
+                const data = result.data || result.responseData;
+                data.forEach((st, idx) => {
+                    const studentData = JSON.stringify(st).replace(/"/g, '&quot;');
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input student-checkbox" type="checkbox" data-student='${studentData}'>
+                                </div>
+                            </td>
+                            <td>${st.rollNo}</td>
+                            <td>${st.studentName}</td>
+                            <td>${st.admissionNo}</td>
+                        </tr>
+                    `;
+                });
+                container.classList.remove('d-none');
+            } else {
+                toastr.error("No students found in this section.");
+            }
+        }
+
+        function toggleSelectAll(masterBox) {
+            const checkboxes = document.querySelectorAll('.student-checkbox');
+            checkboxes.forEach(cb => cb.checked = masterBox.checked);
+        }
+
+        async function sendSelectedMessages() {
+            const title = document.getElementById('msgTitle').value;
+            const description = editorInstance.getData();
+
+            if (!title || !description) {
+                toastr.warning("Title and Description are required.");
+                return;
+            }
+
+            const selectedCheckboxes = document.querySelectorAll('.student-checkbox:checked');
+            if (selectedCheckboxes.length === 0) {
+                toastr.warning("Please select at least one student.");
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveSelectedBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Sending...';
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const cb of selectedCheckboxes) {
+                const student = JSON.parse(cb.getAttribute('data-student'));
+                
+                const data = {
+                    title: title,
+                    description: description,
+                    studentID: parseInt(student.studentID),
+                    classID: parseInt(student.classID),
+                    sectionID: parseInt(student.sectionID),
+                    studentName: student.studentName,
+                    className: student.className,
+                    sectionName: student.sectionName,
+                    rollNo: student.rollNo,
+                    addedOn: new Date().toISOString()
+                };
+
+                try {
+                    const res = await fetch('/StudentMessage/Add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await res.json();
+                    if (result.isSuccess) {
+                        successCount++;
+                        cb.checked = false; // Uncheck successfully sent
+                        cb.closest('tr').classList.add('table-success');
+                    } else {
+                        failCount++;
+                    }
+                } catch (e) {
+                    failCount++;
+                }
+            }
+
+            toastr.success(`Batch complete: ${successCount} sent, ${failCount} failed.`);
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Save Selected';
+        }
+
+        async function sendWholeSchool() {
+            const title = document.getElementById('msgTitle').value;
+            const description = editorInstance.getData();
+
+            if (!title || !description) {
+                toastr.warning("Please fill Title and Description.");
+                return;
+            }
+
+            const data = {
+                title: title,
+                description: description,
+                rollNo: "0"
+            };
+
+            const res = await fetch('/StudentMessage/Add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+            if (result.isSuccess) {
+                toastr.success(result.message || "Message sent to whole school!");
+                document.getElementById('msgTitle').value = '';
+                editorInstance.setData('');
+            } else {
+                toastr.error(result.message || "Failed to send message.");
+            }
+        }
+
+    </script>
+
+    <style>
+        .form-check-input { cursor: pointer; transform: scale(1.2); }
+        .table th { font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
+    </style>
+}

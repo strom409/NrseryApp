@@ -1,0 +1,168 @@
+@model MVC_Project.Models.Topper.TopperViewModel
+@{
+    ViewData["Title"] = "Toppers";
+}
+
+<div class="container-fluid">
+    <!-- PAGE TITLE -->
+    <div class="row page-titles mb-4">
+        <div class="col-md-5 align-self-center">
+            <h3 class="text-primary"><i class="bi bi-mortarboard-fill me-2"></i>Topper Management</h3>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 5px solid #198754;">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 5px solid #dc3545;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- ADD FORM CARD -->
+    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; overflow: hidden;">
+        <div class="card-header bg-primary text-white py-3 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-plus-lg me-2"></i>Add New Topper</h5>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="col-md-4">
+                    <label asp-for="TopperName" class="form-label fw-bold">Student Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-primary"></i></span>
+                        <input asp-for="TopperName" class="form-control border-start-0 ps-0" placeholder="Enter student name" required />
+                    </div>
+                    <span asp-validation-for="TopperName" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="Marks" class="form-label fw-bold">Session/Marks</label>
+                     <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-award text-primary"></i></span>
+                        <input asp-for="Marks" class="form-control border-start-0 ps-0" placeholder="e.g. SESSION 2023-24" required />
+                    </div>
+                    <span asp-validation-for="Marks" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="PhotoFile" class="form-label fw-bold">Student Photo</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-image text-primary"></i></span>
+                        <input asp-for="PhotoFile" type="file" class="form-control border-start-0 ps-0" accept="image/*" required />
+                    </div>
+                    <span asp-validation-for="PhotoFile" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12 mt-4 pt-2">
+                    <button type="submit" class="btn btn-primary px-5 py-2 fw-bold" style="border-radius: 8px;">
+                        <i class="bi bi-save2 me-2"></i>Save Record
+                    </button>
+                    <button type="reset" class="btn btn-light px-4 py-2 ms-2" style="border-radius: 8px;">Reset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LIST CARD -->
+    <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
+        <div class="card-header bg-white py-3 border-bottom">
+             <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-dark fw-bold"><i class="bi bi-list-stars me-2 text-primary"></i>Student Topper List</h5>
+                <span class="badge bg-light text-primary border border-primary px-3 py-2 rounded-pill">Total: @Model.Toppers.Count</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-secondary text-uppercase fs-7" style="width: 80px;">S.No</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7">Student</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7">Session/Details</th>
+                            <th class="py-3 text-secondary text-uppercase fs-7 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Toppers != null && Model.Toppers.Any())
+                        {
+                            int count = 1;
+                            foreach (var topper in Model.Toppers)
+                            {
+                                <tr>
+                                    <td class="px-4 py-3 fw-bold text-muted">@(count++)</td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="position-relative me-3">
+                                                <img src="~/uploads/toppers/@topper.Photo" alt="@topper.TopperName" 
+                                                     class="rounded-circle shadow-sm"
+                                                     style="height: 55px; width: 55px; object-fit: cover; border: 3px solid #fff; background-color: #f1f5f9;" 
+                                                     onerror="this.onerror=null;this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23cbd5e1%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2%22%3E%3C/path%3E%3Ccircle cx=%2212%22 cy=%227%22 r=%224%22%3E%3C/circle%3E%3C/svg%3E';" />
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold text-dark">@topper.TopperName</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 rounded-pill">
+                                            <i class="bi bi-calendar-check me-1"></i> @topper.Marks
+                                        </span>
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        <form asp-action="Delete" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@topper.Tid" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm px-3 rounded-pill"
+                                                    onclick="return confirm('Do you really want to delete this topper record?');">
+                                                <i class="bi bi-trash3 me-1"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="py-4">
+                                        <i class="bi bi-clipboard2-x fs-1 opacity-25 d-block mb-3"></i>
+                                        <h5 class="fw-normal">No topper records found</h5>
+                                        <p class="small">Add a new topper record using the form above.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fs-7 { font-size: 0.75rem; }
+    .bg-info-subtle { background-color: #e0f2fe; }
+    .text-info { color: #0ea5e9 !important; }
+    .border-info-subtle { border-color: #bae6fd !important; }
+    .card { transition: transform 0.2s; }
+    .table-hover tbody tr:hover { background-color: #f8fafc; }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

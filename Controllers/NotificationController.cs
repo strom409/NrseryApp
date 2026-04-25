@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MVC_Project.Extensions;
 using MVC_Project.Models.Notification;
 using MVC_Project.Services.Notification;

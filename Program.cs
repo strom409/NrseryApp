@@ -2,6 +2,11 @@ using MVC_Project.Options;
 using MVC_Project.Services.Auth;
 using MVC_Project.Services.Notification;
 using MVC_Project.Services.Slider;
+using MVC_Project.Services.Topper;
+using MVC_Project.Services.Performance;
+using MVC_Project.Services.Result;
+using MVC_Project.Services.Gallery;
+using MVC_Project.Services.StudentMessage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +26,12 @@ builder.Services.Configure<ApiOptions>(
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<INotificationService, NotificationService>();
 builder.Services.AddHttpClient<ISliderService, SliderService>();
+builder.Services.AddHttpClient<ITopperService, TopperService>();
+builder.Services.AddHttpClient<ITeacherPerformanceService, TeacherPerformanceService>();
+builder.Services.AddHttpClient<IResultPublishService, ResultPublishService>();
 builder.Services.AddHttpClient<MVC_Project.Services.ClassSection.IClassSectionService, MVC_Project.Services.ClassSection.ClassSectionService>();
+builder.Services.AddHttpClient<IGalleryService, GalleryService>();
+builder.Services.AddHttpClient<IStudentMessageService, StudentMessageService>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSession(options =>

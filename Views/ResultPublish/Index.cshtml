@@ -1,0 +1,228 @@
+@model MVC_Project.Models.Result.ResultPublishViewModel
+@{
+    ViewData["Title"] = "Publish Result";
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
+            <h6 class="m-0 font-weight-bold uppercase">
+                <i class="bi bi-megaphone-fill me-2"></i>Publish Result
+            </h6>
+            <button type="button" id="btnAddResultStatus" class="btn btn-light btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#publishModal">
+                <i class="bi bi-plus-lg me-1"></i>Add Publish Result
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Select Class</label>
+                    <select id="classDropdown" class="form-select border-primary shadow-sm">
+                        <option value="">-- Select Class --</option>
+                        @foreach (var item in Model.Classes)
+                        {
+                            <option value="@item.ClassId">@item.ClassName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div id="resultContent" class="mt-4">
+                <!-- Status data will be loaded here -->
+                <div class="text-center text-muted py-5 border rounded bg-light">
+                    <i class="bi bi-info-circle fs-2 d-block mb-3"></i>
+                    <p>Please select a Class to view result publication status.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal EXACT DESIGN FROM SCREENSHOT -->
+<div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="publishModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header text-white" style="background: #2563eb;">
+                <h5 class="modal-title fw-bold" id="publishModalLabel">
+                    <i class="bi bi-save2 me-2"></i>Manage Publication Status
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="publishForm">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Class</label>
+                        <select id="modalClassDropdown" class="form-select border shadow-none bg-light">
+                            <option value="">-- Select Class --</option>
+                            @foreach (var item in Model.Classes)
+                            {
+                                <option value="@item.ClassId">@item.ClassName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="p-3 bg-white rounded border">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-bold text-dark">Is Published?</h6>
+                                <small class="text-muted">Turn on to make results visible</small>
+                            </div>
+                            <div class="form-check form-switch fs-4">
+                                <input class="form-check-input cursor-pointer shadow-none" type="checkbox" id="modalPublishToggle" checked>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light p-3 border-0">
+                <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal" style="background-color: #6b7280; border: none;">Close</button>
+                <button type="button" id="btnSaveStatus" class="btn btn-primary px-4 fw-bold shadow-sm" style="background-color: #0d6efd; border: none;">
+                    <span id="btnText">Save Changes</span>
+                    <span id="btnLoading" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .form-switch .form-check-input { width: 3.5rem; height: 1.75rem; border-color: #ced4da; }
+    .form-switch .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+    .table thead { background-color: #f8f9fc; color: #4b5563; font-weight: bold; }
+    .badge-published { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+    .badge-not-published { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const classDropdown = $('#classDropdown');
+            const modalClassDropdown = $('#modalClassDropdown');
+            const modalPublishToggle = $('#modalPublishToggle');
+            const resultContent = $('#resultContent');
+            const btnSaveStatus = $('#btnSaveStatus');
+
+            function updateTable(classId, className, isPublished) {
+                const badgeClass = isPublished ? 'badge-published' : 'badge-not-published';
+                const badgeText = isPublished ? 'Yes' : 'No';
+                
+                let html = `
+                    <div class="table-responsive shadow-sm rounded border">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Class Name</th>
+                                    <th>Is Published</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td><strong>${className}</strong></td>
+                                    <td><span class="badge ${badgeClass} px-3 py-2 rounded-pill">${badgeText}</span></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="$('#publishModal').modal('show')">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                resultContent.html(html);
+            }
+
+            function fetchStatusForModal(classId) {
+                if (!classId) return;
+                $.get(`/ResultPublish/GetStatus?classId=${classId}`, function (response) {
+                    if (response.isSuccess) {
+                        const isPublished = response.data ? response.data.isPublished : false;
+                        modalPublishToggle.prop('checked', isPublished);
+                    }
+                });
+            }
+
+            classDropdown.on('change', function () {
+                const classId = $(this).val();
+                const className = $(this).find('option:selected').text();
+                
+                if (!classId) {
+                    resultContent.html('<div class="text-center text-muted py-5 border rounded bg-light"><i class="bi bi-info-circle fs-2 d-block mb-3"></i><p>Please select a Class.</p></div>');
+                    return;
+                }
+
+                resultContent.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>');
+
+                $.get(`/ResultPublish/GetStatus?classId=${classId}`, function (response) {
+                    if (response.isSuccess) {
+                        const isPublished = response.data ? response.data.isPublished : false;
+                        updateTable(classId, className, isPublished);
+                        modalClassDropdown.val(classId);
+                        modalPublishToggle.prop('checked', isPublished);
+                    } else {
+                        toastr.error("Error loading status.");
+                    }
+                });
+            });
+
+            $('#btnAddResultStatus').click(function () {
+                const currentClass = classDropdown.val();
+                modalClassDropdown.val(currentClass || "");
+                if (currentClass) fetchStatusForModal(currentClass);
+                else modalPublishToggle.prop('checked', false);
+            });
+
+            modalClassDropdown.on('change', function () {
+                fetchStatusForModal($(this).val());
+            });
+
+            btnSaveStatus.on('click', function () {
+                const classId = modalClassDropdown.val();
+                const isPublished = modalPublishToggle.is(':checked');
+
+                if (!classId) {
+                    toastr.warning("Please select a class first.");
+                    return;
+                }
+
+                btnSaveStatus.prop('disabled', true);
+                $('#btnText').addClass('d-none');
+                $('#btnLoading').removeClass('d-none');
+
+                $.ajax({
+                    url: '/ResultPublish/SaveStatus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ classID: parseInt(classId), isPublished: isPublished }),
+                    success: function (response) {
+                        btnSaveStatus.prop('disabled', false);
+                        $('#btnText').removeClass('d-none');
+                        $('#btnLoading').addClass('d-none');
+                        
+                        if (response.isSuccess) {
+                            toastr.success("Saved successfully.");
+                            $('#publishModal').modal('hide');
+                            
+                            if (classDropdown.val() == classId) {
+                                classDropdown.trigger('change');
+                            } else {
+                                classDropdown.val(classId).trigger('change');
+                            }
+                        } else {
+                            toastr.error(response.message || "Failed to save.");
+                        }
+                    },
+                    error: function () {
+                        btnSaveStatus.prop('disabled', false);
+                        $('#btnText').removeClass('d-none');
+                        $('#btnLoading').addClass('d-none');
+                        toastr.error("Connection error.");
+                    }
+                });
+            });
+        });
+    </script>
+}
