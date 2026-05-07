@@ -124,7 +124,7 @@ namespace MVC_Project.Controllers
                 var item = result.ResponseData.FirstOrDefault();
                 if (item != null)
                 {
-                    TempData["Description"] = item.Description;
+                    TempData["Description"] = !string.IsNullOrEmpty(item.Description) ? item.Description : item.Title;
                     TempData["FilePath"] = item.FilePath;
                 }
             }

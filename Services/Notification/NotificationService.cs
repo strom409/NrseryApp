@@ -327,7 +327,7 @@ namespace MVC_Project.Services.Notification
 
             var requestBody = new
             {
-                model.Description,
+                description = model.Description,
                 Base64Photo = base64Photo,
                 model.Type
             };

@@ -25,6 +25,9 @@ namespace MVC_Project.Models.Notification
         [JsonPropertyName("detail")]
         public string Description { get; set; } = string.Empty;
 
+        [JsonPropertyName("description")]
+        public string? AltDescription { set { if (string.IsNullOrEmpty(Description)) Description = value ?? string.Empty; } }
+
         [JsonPropertyName("filePath")]
         public string FilePath { get; set; } = string.Empty;
 
